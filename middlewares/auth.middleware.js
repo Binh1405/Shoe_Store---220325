@@ -8,6 +8,7 @@ const authenticationMiddleware = async (req, res, next) => {
     if (!headerToken) throw new Error("Missing accesstoken in request header");
     const token = headerToken.split(" ")[1];
     const decrypted = jwt.verify(token, JWT_MY_SECRET);
+    console.log("decrupted", decrypted);
     const user = await User.findById(decrypted._id);
     req.currentUser = user;
     next();

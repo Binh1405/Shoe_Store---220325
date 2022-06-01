@@ -16,6 +16,7 @@ userController.getAll = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   let result;
   let count = 0;
+  console.log("currentUser", req.currentUser);
   try {
     result = await User.find({ isDeleted: false })
       .sort({ createdAt: -1 })

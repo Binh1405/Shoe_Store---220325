@@ -16,7 +16,7 @@ const {
 } = require("../controllers/user.controller");
 
 /* GET users listing. */
-router.get("/", getAll); //admin
+router.get("/", authenticationMiddleware, isAdmin, getAll); //admin
 router.post("/", createByEmailPassword); //public
 router.post("/login", loginWithEmailPassword); //public
 router.put(

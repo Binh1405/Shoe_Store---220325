@@ -6,7 +6,6 @@ const User = require("../models/User");
 const cartController = {};
 cartController.createCart = async (req, res, next) => {
   let result;
-  let test;
   try {
     const owner = req.currentUser._id;
     const { productId } = req.params;
@@ -18,17 +17,14 @@ cartController.createCart = async (req, res, next) => {
     if (qty < 0) {
       throw new Error("qty is invalid");
     }
-    const activeCart = await User.findOne({ owner, status: "active" });
+    const activeCart = await Cart.findOne({ owner, status: "active" });
+    console.log("activeCart", activeCart);
     if (activeCart) throw new Error("this user already has an active cart");
     const found = await Product.findById(productId);
     if (!found) throw new Error("this product can not be found");
     const productChoice = { productId, qty };
     const newCart = { owner, products: [productChoice] };
     result = await Cart.create(newCart);
-    test = await result.populate([
-      { path: "owner", select: ["name", "email"] },
-      { path: "products.productId", select: "name" },
-    ]);
   } catch (error) {
     return next(error);
   }
@@ -36,7 +32,7 @@ cartController.createCart = async (req, res, next) => {
     res,
     200,
     true,
-    { result, test },
+    { result },
     false,
     "Successfully create a shopping cart"
   );

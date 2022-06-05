@@ -18,9 +18,9 @@ productController.createProduct = async (req, res, next) => {
     price = parseInt(price);
     stock = parseInt(stock);
     if (
-      typeof price !== Number ||
+      typeof price !== "number" ||
       price < 0 ||
-      typeof stock !== Number ||
+      typeof stock !== "number" ||
       stock < 0
     ) {
       throw new Error("price or stock invalid");
@@ -74,6 +74,7 @@ productController.updateProduct = async (req, res, next) => {
   const allowOptions = ["name", "price", "stock"];
   const updateObject = {};
   const { productId } = req.params;
+  console.log("productId", productId);
   try {
     allowOptions.forEach((option) => {
       if (req.body[option] !== undefined) {
@@ -98,7 +99,6 @@ productController.updateProduct = async (req, res, next) => {
 };
 productController.getSingleProduct = async (req, res, next) => {
   let result = {};
-  let comments;
   const { productId } = req.params;
   try {
     if (!productId) throw new Error("this product is not found");
@@ -141,6 +141,50 @@ productController.deleteProduct = async (req, res, next) => {
     "Successfully delete this product"
   );
 };
-productController.rateProduct = async () => {};
+productController.rateProduct = async (req, res, next) => {
+  let result;
+  try {
+    const author = req.currentUser._id;
+    let { rate } = req.body;
+    const { productId } = req.params;
+    const found = await Product.findById(productId);
+    if (!found) throw new Error("this product is not found");
+    const isPaid = await Cart.findOne({
+      owner: author,
+      status: "paid",
+      "products.productId": productId,
+    });
+    console.log("test", isPaid);
+    if (!isPaid) throw new Error("you have to buy first in order to rate");
+    rate = parseInt(rate);
+    if (!rate || typeof rate !== "number" || rate < 1) {
+      throw new Error("Invalid rate");
+    }
+    const newRating = { rate, author };
+    found.ratings.push(newRating);
+    let newAverate = found.ratings.reduce((acc, cur) => acc + cur.rate, 0);
+    newAverate /= found.ratings.length;
+    result = await Product.findByIdAndUpdate(
+      productId,
+      {
+        ratings: found.ratings,
+        averageRate: newAverate,
+      },
+      {
+        new: true,
+      }
+    );
+  } catch (error) {
+    return next(error);
+  }
+  return sendResponse(
+    res,
+    200,
+    true,
+    result,
+    false,
+    "Successfully rate the product"
+  );
+};
 
 module.exports = productController;

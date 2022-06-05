@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 const mongoose = require("mongoose");
 const { createTemplateIfNotExist } = require("./helpers/email.helper");
-mongoose.Promise = global.Promise;
+// mongoose.Promise = global.Promise;
 
 const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(

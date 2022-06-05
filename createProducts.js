@@ -1,6 +1,7 @@
 const { faker } = require("@faker-js/faker");
 const Product = require("./models/Product");
 const numberOfProduct = 10;
+require("./mongoose");
 
 const createProduct = async () => {
   console.log("create some fake products");
@@ -14,19 +15,8 @@ const createProduct = async () => {
         stock: Math.ceil(Math.random() * 100),
       };
       console.log("singleProduct", singleProduct);
+      created = await Product.create(singleProduct);
     }
-    created = await Product.create(singleProduct);
-    // const found = await Product.find({ name: singleProduct.name });
-    // if (!found) {
-    //   created = await Product.create(singleProduct);
-    //   console.log(created);
-    // }
-    //   console.log(
-    //     `created ${created.name}, price: ${created.price}, stock: ${created.stock}`
-    //   );
-    // } else {
-    //   console.log(`found same product, ${found.name}`);
-    // }
   } catch (error) {
     console.log("error", error);
   }

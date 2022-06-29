@@ -8,11 +8,11 @@ const productController = {};
 productController.createProduct = async (req, res, next) => {
   console.log("req", req);
   const { name } = req.body;
-  let { price, stock } = req.body;
-  console.log("new product", name, price, stock);
+  let { price, stock, category } = req.body;
+  console.log("new product", name, price, stock, category, gender);
   let result;
   try {
-    if (!name || !price || !stock) {
+    if (!name || !price || !stock || category || gender) {
       throw new Error("missing info");
     }
     price = parseInt(price);

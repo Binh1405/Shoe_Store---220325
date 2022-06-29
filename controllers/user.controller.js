@@ -85,22 +85,30 @@ userController.createByEmailPassword = async (req, res, next) => {
 
 userController.loginWithEmailPassword = async (req, res, next) => {
   const { email, password } = req.body;
-  console.log("email & password", email, password);
-  let result;
+  let token;
+  let userName;
   try {
     if (!email || !password) throw new Error("Please input email and password");
     const user = await User.findOne({ email, isDeleted: false });
     if (!user) throw new Error("User with that email is not found");
     let isMatch = await bcrypt.compare(password, user.password);
     if (isMatch) {
-      result = await user.generateToken();
+      token = await user.generateToken();
+      userName = user.name;
     } else {
       throw new Error("password not match");
     }
   } catch (error) {
     return next(error);
   }
-  return sendResponse(res, 200, true, result, false, "Successully login");
+  return sendResponse(
+    res,
+    200,
+    true,
+    { token, userName },
+    false,
+    "Successully login"
+  );
 };
 
 userController.updateById = async (req, res, next) => {

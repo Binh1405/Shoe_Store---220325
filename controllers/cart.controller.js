@@ -2,14 +2,17 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const sendResponse = require("../helpers/sendResponse");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 
 const cartController = {};
 cartController.createCart = async (req, res, next) => {
   let result;
+  console.log("req", req.body);
   try {
     const owner = req.currentUser._id;
     const { productId } = req.params;
     let { qty } = req.body;
+    console.log("qty", qty);
     qty = parseInt(qty);
     if (!productId || typeof qty !== "number") {
       throw new Error("missing info");
@@ -17,14 +20,27 @@ cartController.createCart = async (req, res, next) => {
     if (qty < 0) {
       throw new Error("qty is invalid");
     }
-    const activeCart = await Cart.findOne({ owner, status: "active" });
+    let activeCart = await Cart.findOne({ owner, status: "active" });
     console.log("activeCart", activeCart);
-    if (activeCart) throw new Error("this user already has an active cart");
-    const found = await Product.findById(productId);
-    if (!found) throw new Error("this product can not be found");
-    const productChoice = { productId, qty };
-    const newCart = { owner, products: [productChoice] };
-    result = await Cart.create(newCart);
+    if (activeCart) {
+      const found = await Product.findById(productId);
+      if (!found) throw new Error("this product can not be found");
+      const productChoice = { productId, qty };
+      const productArray = activeCart.products.map((product) => {
+        console.log();
+        if (
+          mongoose.Types.ObjectId(product.productId).toString() === productId
+        ) {
+          product.qty += qty;
+        }
+        return product;
+      });
+
+      console.log("productChoice", productChoice);
+      activeCart.products = productArray;
+      result = activeCart;
+      await activeCart.save();
+    }
   } catch (error) {
     return next(error);
   }
@@ -39,19 +55,37 @@ cartController.createCart = async (req, res, next) => {
 };
 
 cartController.addProductToCart = async (req, res, next) => {
+  console.log("req", req.currentUser);
   const owner = req.currentUser._id;
-  const body = req.body;
+  console.log("owner", owner);
+  const addedProduct = req.body;
+  console.log("added product", addedProduct);
+  const { qty } = addedProduct;
+  const { productId } = req.params;
+  console.log("productId", productId);
   let result;
   try {
     const cartToUpdate = await Cart.findOne({ owner, status: "active" });
-    body.map((product) => {
-      const qty = parseInt(product.qty);
-      const productId = product.productId;
-      cartToUpdate.products.push({ productId, qty });
+    console.log("cartToUpdate", cartToUpdate);
+    // body.map((product) => {
+    //   const qty = parseInt(product.qty);
+    //   cartToUpdate.products.push({ productId, qty });
+    // });
+    const productArray = await cartToUpdate.products.map((product) => {
+      if (mongoose.Types.ObjectId(product.productId).toString() === productId) {
+        product.qty += qty;
+      } else {
+        cartToUpdate.products.push({ productId, qty });
+      }
+      return productArray;
     });
-    result = await Product.findByIdAndUpdate(cartToUpdate._id, cartToUpdate, {
+    cartToUpdate.products = productArray;
+    await cartToUpdate.save();
+    console.log("cartToUpdate", cartToUpdate);
+    result = await Cart.findByIdAndUpdate(cartToUpdate._id, cartToUpdate, {
       new: true,
     });
+    console.log("result", result);
   } catch (error) {
     return next(error);
   }
@@ -94,7 +128,7 @@ cartController.removeProductFromCart = async (req, res, next) => {
 
 cartController.getSingleCart = async (req, res, next) => {
   let result;
-  const { cartId } = req.query;
+  const { cartId } = req.params;
   const owner = req.currentUser._id;
   try {
     console.log(owner, cartId);
@@ -115,13 +149,19 @@ cartController.getSingleCart = async (req, res, next) => {
 };
 cartController.payCart = async (req, res, next) => {
   let result = {};
+  console.log("req", req);
   const { cartId } = req.params;
-  const { currentBalance, _id } = req.curentUser;
+  console.log("currentUser", req.currentUser);
+  const { currentBalance, _id } = req.currentUser;
+  console.log("_id", _id);
   try {
     let found = await Cart.findById(cartId).populate("products.productId");
+    console.log("found", found);
     const productsToUpdate = await Promise.all(
       found.products.map(async (request) => {
+        console.log("request", request);
         const existed = await Product.findById(request.productId._id);
+        console.log("existed", existed);
         let newStock = existed.stock;
         if (request.qty <= existed.stock) {
           newStock = existed.stock - request.qty;
@@ -218,8 +258,10 @@ cartController.getAll = async (req, res, next) => {
   );
 };
 cartController.getAllOwn = async (req, res, next) => {
+  console.log("req", req);
   let result = {};
   let owner = req.currentUser._id;
+  console.log("owner", owner);
   try {
     result.carts = await Cart.find({ owner }).populate("products.productId");
     result.count = result.carts.length;

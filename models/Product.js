@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const productSchema = Schema(
   {
     name: { type: String, required: true },
-    price: { type: String, required: true },
+    price: { type: Number, required: true },
     stock: { type: String, required: true },
     ratings: [
       {
@@ -12,8 +12,15 @@ const productSchema = Schema(
         rate: { type: Number, enum: [1, 2, 3, 4, 5] },
       },
     ],
+    category: {
+      type: String,
+      enum: ["bike", "shoe", "tower", "shirt", "cheese"],
+      required: true,
+    },
+    gender: { type: String, enum: ["men", "women", "kids"], required: true },
     averageRate: { type: Number, default: 0 },
     isDeleted: { type: Boolean, default: false },
+    cover: { type: String },
   },
   {
     timestamps: true,

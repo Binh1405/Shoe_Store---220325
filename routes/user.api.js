@@ -17,7 +17,7 @@ const {
 
 /* GET users listing. */
 router.get("/", authenticationMiddleware, isAdmin, getAll); //admin
-router.post("/", createByEmailPassword); //public
+router.post("/register", createByEmailPassword); //public
 router.post("/login", loginWithEmailPassword); //public
 router.put(
   "/update-me",

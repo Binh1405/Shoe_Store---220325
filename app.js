@@ -29,9 +29,39 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require("passport");
 app.use(passport.initialize());
 app.use(passport.session());
+passport.serializeUser((user, cb) => {
+  cb(null, user.id);
+});
+passport.deserializeUser((user, cb) => {
+  cb(null, user);
+});
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://localhost:5000/login/googleok",
+    },
+    (accessToken, refreshToken, profile, cb) => {
+      console.log("success", accessToken, profile);
+      return cb(null, profile);
+    }
+  )
+);
+app.get(
+  "/login/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+app.get(
+  "/login/googleOK",
+  passport.authenticate("google", { failureRedirect: "/notFound" })
+);
+
 require("./mongoose");
 require("./helpers/passport.helper");
 app.use("/api", indexRouter);

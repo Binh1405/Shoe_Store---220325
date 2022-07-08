@@ -5,7 +5,8 @@ const productSchema = Schema(
   {
     name: { type: String, required: true },
     price: { type: Number, required: true },
-    stock: { type: String, required: true },
+    stock: { type: Number, required: true },
+    description: { type: String, required: true },
     ratings: [
       {
         author: { type: Schema.Types.ObjectId, ref: "User" },
@@ -20,7 +21,7 @@ const productSchema = Schema(
     gender: { type: String, enum: ["men", "women", "kids"], required: true },
     averageRate: { type: Number, default: 0 },
     isDeleted: { type: Boolean, default: false },
-    cover: { type: String },
+    cover: { type: String, required: true },
   },
   {
     timestamps: true,

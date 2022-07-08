@@ -12,9 +12,10 @@ const cartSchema = Schema(
           required: true,
           ref: "Product",
         },
-        qty: { type: Number, required: true },
+        qty: { type: Number, required: true, default: 1 },
       },
     ],
+    totalPrice: { type: Number, default: 0 },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }

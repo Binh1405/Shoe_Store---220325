@@ -55,37 +55,35 @@ cartController.createCart = async (req, res, next) => {
 };
 
 cartController.addProductToCart = async (req, res, next) => {
-  console.log("req", req.currentUser);
   const owner = req.currentUser._id;
-  console.log("owner", owner);
-  const addedProduct = req.body;
-  console.log("added product", addedProduct);
-  const { qty } = addedProduct;
-  const { productId } = req.params;
-  console.log("productId", productId);
   let result;
+  const addedProduct = req.body;
+  const { productId } = addedProduct;
+  let { qty, price } = addedProduct;
+  qty = parseInt(qty);
+  price = parseInt(price);
   try {
-    const cartToUpdate = await Cart.findOne({ owner, status: "active" });
-    console.log("cartToUpdate", cartToUpdate);
-    // body.map((product) => {
-    //   const qty = parseInt(product.qty);
-    //   cartToUpdate.products.push({ productId, qty });
-    // });
-    const productArray = await cartToUpdate.products.map((product) => {
-      if (mongoose.Types.ObjectId(product.productId).toString() === productId) {
-        product.qty += qty;
+    const cart = await Cart.findOne({ owner, status: "active" });
+    if (cart) {
+      const existingProductIndex = cart.products.findIndex(
+        (p) => mongoose.Types.ObjectId(p.productId).toString() == productId
+      );
+      console.log("existingProductIndex", existingProductIndex);
+      if (existingProductIndex >= 0) {
+        const existingProduct = cart.products[existingProductIndex];
+        existingProduct.qty += qty;
+        cart.totalPrice += price;
       } else {
-        cartToUpdate.products.push({ productId, qty });
+        cart.products.push(addedProduct);
+        cart.totalPrice += price;
       }
-      return productArray;
-    });
-    cartToUpdate.products = productArray;
-    await cartToUpdate.save();
-    console.log("cartToUpdate", cartToUpdate);
-    result = await Cart.findByIdAndUpdate(cartToUpdate._id, cartToUpdate, {
-      new: true,
-    });
-    console.log("result", result);
+    } else {
+      cart = await Cart.create({ owner, status: "active" });
+      cart.products.push(addedProduct);
+      cart.totalPrice = price;
+    }
+    await cart.save();
+    result = await Cart.findByIdAndUpdate(cart._id, cart, { new: true });
   } catch (error) {
     return next(error);
   }
@@ -95,16 +93,18 @@ cartController.addProductToCart = async (req, res, next) => {
     true,
     result,
     false,
-    "Successfully add product to this cart"
+    "successfully add product to card"
   );
 };
 
 cartController.removeProductFromCart = async (req, res, next) => {
   let result;
-  const { cartId } = req.params;
   let { productId, qty } = req.body;
+  let owner = req.currentUser._id;
+  console.log("owner", owner);
   try {
-    const cartFound = await Cart.findById(cartId);
+    const cartFound = await Cart.findById({ owner });
+    console.log("cartFound", cartFound);
     const newProductsList = cartFound.products.filter((existed) => {
       if (existed.productId.equals(productId)) {
         existed.qty -= qty;

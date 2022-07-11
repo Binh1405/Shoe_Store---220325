@@ -7,6 +7,7 @@ const logger = require("morgan");
 const sendResponse = require("./helpers/sendResponse");
 const cors = require("cors");
 const session = require("express-session");
+const bodyParser = require("body-parser");
 
 const indexRouter = require("./routes/index");
 
@@ -29,6 +30,8 @@ app.use(
     saveUninitialized: true,
   })
 );
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require("passport");

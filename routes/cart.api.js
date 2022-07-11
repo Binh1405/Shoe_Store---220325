@@ -20,7 +20,7 @@ router.put(
   addProductToCart
 );
 router.delete(
-  "/removeProductCart",
+  "/removeProductCart/:productId",
   authenticationMiddleware,
   removeProductFromCart
 );

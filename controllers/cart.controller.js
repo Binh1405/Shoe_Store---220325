@@ -7,7 +7,6 @@ const mongoose = require("mongoose");
 const cartController = {};
 cartController.createCart = async (req, res, next) => {
   let result;
-  console.log("req", req.body);
   try {
     const owner = req.currentUser._id;
     const { productId } = req.params;
@@ -21,7 +20,6 @@ cartController.createCart = async (req, res, next) => {
       throw new Error("qty is invalid");
     }
     let activeCart = await Cart.findOne({ owner, status: "active" });
-    console.log("activeCart", activeCart);
     if (activeCart) {
       const found = await Product.findById(productId);
       if (!found) throw new Error("this product can not be found");
@@ -35,8 +33,6 @@ cartController.createCart = async (req, res, next) => {
         }
         return product;
       });
-
-      console.log("productChoice", productChoice);
       activeCart.products = productArray;
       result = activeCart;
       await activeCart.save();
@@ -68,7 +64,6 @@ cartController.addProductToCart = async (req, res, next) => {
       const existingProductIndex = cart.products.findIndex(
         (p) => mongoose.Types.ObjectId(p.productId).toString() == productId
       );
-      console.log("existingProductIndex", existingProductIndex);
       if (existingProductIndex >= 0) {
         const existingProduct = cart.products[existingProductIndex];
         existingProduct.qty += qty;
@@ -99,20 +94,25 @@ cartController.addProductToCart = async (req, res, next) => {
 
 cartController.removeProductFromCart = async (req, res, next) => {
   let result;
-  let { productId, qty } = req.body;
+  let { productId } = req.params;
+  console.log("productId", productId);
   let owner = req.currentUser._id;
   console.log("owner", owner);
   try {
-    const cartFound = await Cart.findById({ owner });
+    const cartFound = await Cart.findOne({ owner, status: "active" });
     console.log("cartFound", cartFound);
     const newProductsList = cartFound.products.filter((existed) => {
       if (existed.productId.equals(productId)) {
-        existed.qty -= qty;
+        existed.qty -= 1;
       }
       return existed.qty > 0;
     });
+    console.log("newProductsList", newProductsList);
     cartFound.products = newProductsList;
-    result = await Cart.findByIdAndUpdate(cartId, cartFound, { new: true });
+    await cartFound.save();
+    result = await Cart.findByIdAndUpdate(cartFound._id, cartFound, {
+      new: true,
+    });
   } catch (error) {
     return next(error);
   }
@@ -122,7 +122,7 @@ cartController.removeProductFromCart = async (req, res, next) => {
     true,
     result,
     false,
-    `Successfully remove ${qty} product from cart`
+    `Successfully remove product from cart`
   );
 };
 

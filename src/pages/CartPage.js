@@ -6,13 +6,15 @@ import {
   CardContent,
   CardMedia,
   Container,
+  Grid,
+  IconButton,
   Stack,
   Typography,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import { ClipLoader } from "react-spinners";
 import { useSelector, useDispatch } from "react-redux";
-import { getOwnCart, removeSingleProduct } from "../redux/reducers/cartReducer";
+import { addOneProduct, getOwnCart, removeSingleProduct } from "../redux/reducers/cartReducer";
 import { useNavigate } from "react-router-dom";
 
 const CartPage = () => {
@@ -26,8 +28,17 @@ const CartPage = () => {
   };
   const dispatch = useDispatch();
   const removeProduct = (productId) => {
-    dispatch(removeSingleProduct(productId));
+    console.log("remove product")
+    // dispatch(removeSingleProduct(productId));
   };
+  const addOne = (productId) => {
+    console.log("addOne")
+    dispatch(addOneProduct({productId, qty:1}))
+  }
+  const subOne = (productId) => {
+    console.log("subOne")
+    dispatch(removeSingleProduct(productId));
+  }
   // const removeCart = () => {
   //   dispatch(removeSingleCart(owner._id));
   // };
@@ -53,7 +64,7 @@ const CartPage = () => {
           {products?.map((product) => (
             <Card
               key={product._id}
-              sx={{ width: "12rem", height: "18rem", marginBottom: "2rem" }}
+              sx={{ width: "15rem", height: "20rem", marginBottom: "2rem" }}
             >
               <CardActionArea>
                 <CardMedia
@@ -69,9 +80,40 @@ const CartPage = () => {
                   <Typography gutterBottom variant="body1" component="div">
                     Price: {`${product?.productId?.price}$`}
                   </Typography>
+                  <Grid container sx={{display: "flex", alignItems: "center"}}>
+                  <Grid item xs={6}>
                   <Typography gutterBottom variant="body1" component="div">
                     Quantity: {`${product.qty}`}
-                  </Typography>
+                    </Typography>
+                    </Grid>
+                    <Grid item sx={{display: "flex", justifyContent: "space-evenly", alignItems: "center", position: "relative", bottom: "4px"}} xs={4}>
+                      <Grid item xs={1}>
+                      <IconButton
+                        edge="start"
+                        color="inherit"
+                        aria-label="menu"
+                        sx={{borderRadius: "50%", width: "1.5rem", height: "1.5rem"}}
+                        onClick={()=>addOne(product.productId._id)}>
+                    <Button sx={{color: "success.darker"}}>
+                    +
+                  </Button>
+                  </IconButton>
+                  </Grid>
+                  <Grid item xs={1}>
+                  <IconButton
+                    edge="start"
+                    color="inherit"
+                    aria-label="menu"
+                    sx={{borderRadius: "50%", width: "1.5rem", height: "1.5rem" }}
+                    onClick={()=>subOne(product.productId._id)}
+          >
+                  <Button sx={{color: "success.darker"}} >
+                    -
+                  </Button>
+                  </IconButton>
+                  </Grid>
+                  </Grid>
+                  </Grid>
                   <Button
                     sx={{
                       position: "absolute",

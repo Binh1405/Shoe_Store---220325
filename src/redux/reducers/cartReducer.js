@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 
 const initialState = {
   cartProducts: [],
+  singleProduct: {productId: "", quantity: ""},
   quantity: "",
   total: 0,
   error: "",
@@ -52,6 +53,16 @@ export const removeSingleProduct = createAsyncThunk(
   }
 );
 
+export const addOneProduct = createAsyncThunk(
+  "cart/addOneProduct", async ({productId, qty}, {dispatch})=>{
+    const res = await apiService.put(`/carts/addOneProduct/${productId}`, {productId, qty}
+    )
+    console.log("addOneProductToCart", res)
+    toast.success("add one more successfully")
+    dispatch(getOwnCart())
+    return res.data.data.products[0]
+  }
+)
 export const cartSlice = createSlice({
   name: "carts",
   initialState,
@@ -123,6 +134,26 @@ export const cartSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       });
+    builder
+    .addCase(addOneProduct.pending, (state)=>{
+      state.status = "loading";
+      state.loading = true;
+    })
+    .addCase(addOneProduct.fulfilled, (state, action)=>{
+      state.status = "idle";
+      state.loading = false;
+      const {productId} = action.payload;
+      console.log("productId", productId)
+      state.cartProducts = state.cartProducts.filter((product) => {
+        if (product.productId._id == productId) return true;
+        return false;
+      });
+  })
+    .addCase(addOneProduct.rejected, (state, action)=>{
+        state.status = "error";
+        state.loading = false;
+        state.error = action.error.message
+      })
   },
 });
 

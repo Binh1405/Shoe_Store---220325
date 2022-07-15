@@ -14,6 +14,7 @@ const initialState = {
 export const getOwnCart = createAsyncThunk("cart/getOwnCart", async () => {
   const res = await apiService.get(`/carts/myCart`);
   console.log("res", res);
+  toast.success("successfully get your cart")
   return res.data.data;
 });
 
@@ -42,7 +43,7 @@ export const removeSingleProduct = createAsyncThunk(
   "cart/removeProductFromCart",
   async (productId, { dispatch }) => {
     const res = await apiService.delete(
-      `/carts/removeProductCart/${productId}`,
+      `/carts/subtractOneProduct/${productId}`,
       { data: { productId } }
     );
     toast.success("this product has been removed");

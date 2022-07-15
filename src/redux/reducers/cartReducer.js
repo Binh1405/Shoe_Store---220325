@@ -4,16 +4,15 @@ import { toast } from "react-toastify";
 
 const initialState = {
   cartProducts: [],
-  quantity: "",
+  quantity: 0,
   total: 0,
   error: "",
   loading: false,
-  state: "",
+  status: "",
 };
 
 export const getOwnCart = createAsyncThunk("cart/getOwnCart", async () => {
   const res = await apiService.get(`/carts/myCart`);
-  console.log("res", res);
   toast.success("successfully get your cart")
   return res.data.data;
 });
@@ -22,6 +21,7 @@ export const createCart = createAsyncThunk(
   "cart/createCart",
   async (productId) => {
     const res = await apiService.post(`/carts/${productId}`);
+    toast.success("successfully create a cart")
     return res.data.data.result;
   }
 );
@@ -34,7 +34,7 @@ export const addProductToCart = createAsyncThunk(
       qty,
       price,
     });
-    console.log("AddOrCreateProductToCart", res);
+    toast.success("successfully add product to cart")
     return res.data.data.products;
   }
 );
@@ -46,7 +46,7 @@ export const removeSingleProduct = createAsyncThunk(
       `/carts/subtractOneProduct/${productId}`,
       { data: { productId } }
     );
-    toast.success("this product has been removed");
+    toast.success("successfully remove 1 quantity");
     dispatch(getOwnCart());
     return res.data.data.products;
   }
@@ -58,7 +58,6 @@ export const removeWholeProductFromCart = createAsyncThunk(
     const res = await apiService.delete(
       `/carts/removeProductFromCart/${productId}`
     )
-    console.log("deleted product from cart", res)
     toast.success("this product has been deleted")
     dispatch(getOwnCart())
     return res.data.data.products
@@ -69,7 +68,6 @@ export const addOneProduct = createAsyncThunk(
   "cart/addOneProduct", async ({productId, qty}, {dispatch})=>{
     const res = await apiService.put(`/carts/addOneProduct/${productId}`, {productId, qty}
     )
-    console.log("addOneProductToCart", res)
     toast.success("add one more successfully")
     dispatch(getOwnCart())
     return res.data.data.products[0]

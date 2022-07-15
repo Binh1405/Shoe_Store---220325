@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 
 const initialState = {
   cartProducts: [],
-  singleProduct: {productId: "", quantity: ""},
   quantity: "",
   total: 0,
   error: "",
@@ -15,7 +14,7 @@ const initialState = {
 export const getOwnCart = createAsyncThunk("cart/getOwnCart", async () => {
   const res = await apiService.get(`/carts/myCart`);
   console.log("res", res);
-  return res.data.data.carts[0];
+  return res.data.data;
 });
 
 export const createCart = createAsyncThunk(
@@ -46,12 +45,24 @@ export const removeSingleProduct = createAsyncThunk(
       `/carts/removeProductCart/${productId}`,
       { data: { productId } }
     );
-    console.log("deleted product from cart", res);
     toast.success("this product has been removed");
     dispatch(getOwnCart());
     return res.data.data.products;
   }
 );
+
+export const removeWholeProductFromCart = createAsyncThunk(
+  "cart/removeWholeProductFromCart", 
+  async(productId, {dispatch})=>{
+    const res = await apiService.delete(
+      `/carts/removeProductFromCart/${productId}`
+    )
+    console.log("deleted product from cart", res)
+    toast.success("this product has been deleted")
+    dispatch(getOwnCart())
+    return res.data.data.products
+  }
+)
 
 export const addOneProduct = createAsyncThunk(
   "cart/addOneProduct", async ({productId, qty}, {dispatch})=>{
@@ -134,6 +145,22 @@ export const cartSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       });
+    builder.addCase(removeWholeProductFromCart.pending, (state)=>{
+      state.status = "loading";
+      state.loading = true
+    }).addCase(removeWholeProductFromCart.fulfilled, (state, action)=>{
+      state.status = "idle";
+      state.loading = false;
+      const {productId} = action.payload
+      state.cartProducts = state.cartProducts.filter((product)=>{
+        if(product.productId._id !== productId) return true
+        return false
+      })
+    }).addCase(removeWholeProductFromCart.rejected, (state, action) => {
+      state.status = "error";
+      state.loading = false
+      state.error = action.error.message
+    });
     builder
     .addCase(addOneProduct.pending, (state)=>{
       state.status = "loading";

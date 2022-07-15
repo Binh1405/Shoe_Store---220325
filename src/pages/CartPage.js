@@ -14,7 +14,7 @@ import {
 import React, { useEffect } from "react";
 import { ClipLoader } from "react-spinners";
 import { useSelector, useDispatch } from "react-redux";
-import { addOneProduct, getOwnCart, removeSingleProduct } from "../redux/reducers/cartReducer";
+import { addOneProduct, getOwnCart, removeSingleProduct, removeWholeProductFromCart } from "../redux/reducers/cartReducer";
 import { useNavigate } from "react-router-dom";
 
 const CartPage = () => {
@@ -27,16 +27,13 @@ const CartPage = () => {
     navigate(`/product/${productId}`);
   };
   const dispatch = useDispatch();
-  const removeProduct = (productId) => {
-    console.log("remove product")
-    // dispatch(removeSingleProduct(productId));
+  const removeWholeProduct = (productId) => {
+    dispatch(removeWholeProductFromCart(productId));
   };
   const addOne = (productId) => {
-    console.log("addOne")
     dispatch(addOneProduct({productId, qty:1}))
   }
   const subOne = (productId) => {
-    console.log("subOne")
     dispatch(removeSingleProduct(productId));
   }
   // const removeCart = () => {
@@ -125,7 +122,7 @@ const CartPage = () => {
                       minWidth: "1.5rem",
                     }}
                     size="small"
-                    onClick={() => removeProduct(product.productId._id)}
+                    onClick={() => removeWholeProduct(product.productId._id)}
                   >
                     X
                   </Button>
